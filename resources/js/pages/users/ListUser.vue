@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue';
 import { Form, Field } from 'vee-validate';
 import * as yup from 'yup';
 import { useToastr } from '../../toastr.js';
+import { formatDate } from '../../helper.js';
 
 const toastr = useToastr();
 const users = ref([]);
@@ -90,11 +91,11 @@ const confirmUserDeletion = (user) => {
 
 const deleteUser = () => {
     axios.delete(`/api/users/${userIdBeingDeleted.value}`)
-    .then(() => {
-        $('#deleteUserModal').modal('hide');
-        users.value = users.value.filter(user => user.id !== userIdBeingDeleted.value)
-        toastr.success('User deleted successfully!');
-    });
+        .then(() => {
+            $('#deleteUserModal').modal('hide');
+            users.value = users.value.filter(user => user.id !== userIdBeingDeleted.value)
+            toastr.success('User deleted successfully!');
+        });
 
 };
 
@@ -149,8 +150,8 @@ onMounted(() => {
                                 <td>{{ index + 1 }}</td>
                                 <td>{{ user.name }}</td>
                                 <td>{{ user.email }}</td>
-                                <td>2022-02-03</td>
-                                <td>Super Admin</td>
+                                <td>{{ formatDate(user.created_at) }}</td>
+                                <td>{{ user.role }}</td>
                                 <td>
                                     <a href="#" @click.prevent="editUser(user)"><i class="fa fa-edit"></i></a>
                                     <a href="#" @click.prevent="confirmUserDeletion(user)"><i
