@@ -1,10 +1,11 @@
 <script setup>
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Form, Field } from 'vee-validate';
 import * as yup from 'yup';
 import { useToastr } from '../../toastr.js';
 import UserListItem from './UserListItem.vue';
+import { debounce } from 'lodash';
 
 const toastr = useToastr();
 const users = ref([]);
@@ -86,6 +87,26 @@ const userDeleted = (userId) => {
     users.value = users.value.filter(user => user.id !== userId)
 };
 
+const searchQuery = ref(null);
+
+const search = () => {
+    axios.get('/api/users/search', {
+        params: {
+            query: searchQuery.value
+        }
+    })
+    .then(response => {
+        users.value = response.data;
+    })
+    .catch(error => {
+        console.log(error);
+    })
+};
+
+watch(searchQuery, debounce(() => {
+    search();
+}, 300));
+
 onMounted(() => {
     getUsers();
 });
@@ -112,10 +133,15 @@ onMounted(() => {
 
     <div class="content">
         <div class="container-fluid">
+           <div class="d-flex justify-content-between">
             <button @click="addUser" type="button" class="mb-2 btn btn-primary">
                 <i class="fa fa-plus-circle mr-1"></i>
                 Add New User
             </button>
+            <div>
+                <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
+            </div>
+           </div>
             <div class="card">
                 <div class="card-body">
                     <table class="table table-bordered">
@@ -129,14 +155,14 @@ onMounted(() => {
                                 <th>Options</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <UserListItem v-for="(user, index) in users"
-                                :key="user.id"
-                                :user=user
-                                :index=index
-                                @editUser="editUser"
-                                @user-deleted="userDeleted"
-                            />
+                        <tbody v-if="users.length > 0">
+                            <UserListItem v-for="(user, index) in users" :key="user.id" :user=user :index=index
+                                @editUser="editUser" @user-deleted="userDeleted" />
+                        </tbody>
+                        <tbody v-else>
+                            <tr>
+                                <td colspan="6" class="text-center">No result found...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
