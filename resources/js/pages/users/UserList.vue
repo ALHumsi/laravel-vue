@@ -6,9 +6,10 @@ import * as yup from 'yup';
 import { useToastr } from '../../toastr.js';
 import UserListItem from './UserListItem.vue';
 import { debounce } from 'lodash';
+import { Bootstrap4Pagination } from 'laravel-vue-pagination';
 
 const toastr = useToastr();
-const users = ref([]);
+const users = ref({'data': []});
 const editing = ref(false);
 const formValues = ref();
 const form = ref(null);
@@ -25,8 +26,8 @@ const editUserSchema = yup.object({
     email: yup.string().email().required(),
 });
 
-const getUsers = () => {
-    axios.get('/api/users')
+const getUsers = (page = 1) => {
+    axios.get(`/api/users?page=${page}`)
         .then((response) => {
             users.value = response.data;
         })
@@ -95,12 +96,12 @@ const search = () => {
             query: searchQuery.value
         }
     })
-    .then(response => {
-        users.value = response.data;
-    })
-    .catch(error => {
-        console.log(error);
-    })
+        .then(response => {
+            users.value = response.data;
+        })
+        .catch(error => {
+            console.log(error);
+        })
 };
 
 watch(searchQuery, debounce(() => {
@@ -133,15 +134,15 @@ onMounted(() => {
 
     <div class="content">
         <div class="container-fluid">
-           <div class="d-flex justify-content-between">
-            <button @click="addUser" type="button" class="mb-2 btn btn-primary">
-                <i class="fa fa-plus-circle mr-1"></i>
-                Add New User
-            </button>
-            <div>
-                <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
+            <div class="d-flex justify-content-between">
+                <button @click="addUser" type="button" class="mb-2 btn btn-primary">
+                    <i class="fa fa-plus-circle mr-1"></i>
+                    Add New User
+                </button>
+                <div>
+                    <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
+                </div>
             </div>
-           </div>
             <div class="card">
                 <div class="card-body">
                     <table class="table table-bordered">
@@ -155,8 +156,8 @@ onMounted(() => {
                                 <th>Options</th>
                             </tr>
                         </thead>
-                        <tbody v-if="users.length > 0">
-                            <UserListItem v-for="(user, index) in users" :key="user.id" :user=user :index=index
+                        <tbody v-if="users.data.length > 0">
+                            <UserListItem v-for="(user, index) in users.data" :key="user.id" :user=user :index=index
                                 @editUser="editUser" @user-deleted="userDeleted" />
                         </tbody>
                         <tbody v-else>
@@ -167,6 +168,7 @@ onMounted(() => {
                     </table>
                 </div>
             </div>
+            <Bootstrap4Pagination :data="users" @pagination-change-page="getUsers" />
         </div>
     </div>
 
