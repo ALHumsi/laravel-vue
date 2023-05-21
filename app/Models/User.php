@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -46,16 +47,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
 
     ];
-
-    // protected $appends = [
-    //     'formatted_created_at',
-    // ];
-
-    // public function getFormattedCreateAtAttribute()
-    // {
-    //     return $this->created_at->format(config('app.date_format'));
-    // }
-
     public function role(): Attribute
     {
         return Attribute::make(
